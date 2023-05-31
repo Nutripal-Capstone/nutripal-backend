@@ -11,12 +11,15 @@ CREATE TYPE "Goals" AS ENUM ('LW', 'MW', 'GW');
 CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
     "firebaseId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
     "height" INTEGER NOT NULL,
     "weight" INTEGER NOT NULL,
     "gender" "Genders" NOT NULL,
     "age" INTEGER NOT NULL,
     "activityLevel" "ActivityLevels" NOT NULL,
     "goal" "Goals" NOT NULL,
+    "email" TEXT NOT NULL,
+    "provider" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
