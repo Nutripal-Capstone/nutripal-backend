@@ -9,3 +9,38 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id            Int            @id @default(autoincrement())
+  firebaseId    String         @unique
+  name          String
+  height        Int
+  weight        Int
+  gender        Genders
+  age           Int
+  activityLevel ActivityLevels
+  goal          Goals
+  email         String
+  provider      String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+enum Genders {
+  M
+  F
+}
+
+enum ActivityLevels {
+  SD
+  LA
+  MA
+  VA
+  SA
+}
+
+enum Goals {
+  LW
+  MW
+  GW
+}
