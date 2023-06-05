@@ -19,6 +19,7 @@ app.get("/", async(req, res) => {
     console.error(error)
   }
 });
+
 app.use("/auth", authRouter);
 
 app.listen(PORT, () =>
