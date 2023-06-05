@@ -24,6 +24,8 @@ model User {
   provider      String
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+
+  nutritionGoals NutritionGoal[]
 }
 
 enum Genders {
@@ -43,4 +45,15 @@ enum Goals {
   LW
   MW
   GW
+}
+
+model NutritionGoal {
+  id               Int      @id @default(autoincrement())
+  userId           Int
+  user             User     @relation(fields: [userId], references: [id])
+  calorieGoal      Int
+  proteinGoal      Int
+  carbohydrateGoal Int
+  fatGoal          Int
+  createdAt        DateTime @default(now())
 }
