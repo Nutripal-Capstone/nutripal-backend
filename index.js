@@ -15,7 +15,6 @@ app.get("/", async(req, res) => {
     res.status(200).json({
       "message" : "Hello Nutripal User! Database Connection Successful"
     })
-    
   } catch (error) {
     console.error(error)
   }
