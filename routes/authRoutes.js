@@ -4,7 +4,7 @@ import verifyFirebaseToken from "../middleware/verifyFirebaseToken.js";
 
 const authRouter = express.Router();
 
-authRouter.post("/login", verifyFirebaseToken, login);
+authRouter.get("/login", verifyFirebaseToken, login);
 authRouter.post("/register", verifyFirebaseToken, register);
 
 export default authRouter;
