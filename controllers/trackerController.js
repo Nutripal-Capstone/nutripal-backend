@@ -60,7 +60,7 @@ export const getTrackerData = [
       return res.status(500).json({
         success: false,
         data: { error: error.message },
-        message: "Error fetching tracker data/",
+        message: "Error fetching tracker data.",
       });
     }
   },
