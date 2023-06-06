@@ -40,13 +40,13 @@ export const login = async (req, res) => {
 };
 
 export const register = [
-  check("name").notEmpty(),
-  check("height").isInt(),
-  check("weight").isInt(),
-  check("gender").isIn(["M", "F"]),
-  check("age").isInt(),
-  check("activityLevel").isIn(["SD", "LA", "MA", "VA", "SA"]),
-  check("goal").isIn(["LW", "MW", "GW"]),
+  check("name").notEmpty().withMessage("Name is required."),
+  check("height").isInt().withMessage("Must be int."),
+  check("weight").isInt().withMessage("Must be int."),
+  check("gender").isIn(["M", "F"]).withMessage("Invalid value."),
+  check("age").isInt().withMessage("Must be int."),
+  check("activityLevel").isIn(["SD", "LA", "MA", "VA", "SA"]).withMessage("Invalid value."),
+  check("goal").isIn(["LW", "MW", "GW"]).withMessage("Invalid value."),
   async (req, res) => {
     const errors = validationResult(req);
 
@@ -54,7 +54,7 @@ export const register = [
       return res.status(400).json({
         success: false,
         data: { errors: errors.array() },
-        message: "Validation errors",
+        message: "Validation errors.",
       });
     }
 
@@ -62,6 +62,7 @@ export const register = [
       uid,
       firebase: { sign_in_provider: provider },
       email,
+      picture,
     } = req.user;
 
     const { name, height, weight, gender, age, activityLevel, goal } = req.body;
@@ -79,6 +80,7 @@ export const register = [
           goal,
           email,
           provider,
+          picture,
         },
       });
 
@@ -115,13 +117,13 @@ export const register = [
       return res.status(201).json({
         success: true,
         data: token,
-        message: "User registered successfully",
+        message: "User registered successfully.",
       });
     } catch (error) {
       return res.status(500).json({
         success: false,
         data: { error: error.message },
-        message: "Error registering user",
+        message: "Error registering user.",
       });
     }
   },
