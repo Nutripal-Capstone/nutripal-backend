@@ -4,7 +4,6 @@ dotenv.config();
 import express from "express";
 import authRouter from "./routes/authRoutes.js";
 import prisma from "./config/prisma.js";
-import profileRouter from "./routes/profileRoutes.js";
 
 const PORT = process.env.PORT || 8080;
 
