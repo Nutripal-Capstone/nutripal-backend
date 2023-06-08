@@ -18,6 +18,7 @@ const verifyFirebaseToken = (req, res, next) => {
       next();
     })
     .catch((error) => {
+      console.log(error);
       return res.status(401).json({
         success: false,
         data: null,
