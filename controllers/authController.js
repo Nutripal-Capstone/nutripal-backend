@@ -47,6 +47,7 @@ export const register = [
   check("age").isInt().withMessage("Must be int."),
   check("activityLevel").isIn(["SD", "LA", "MA", "VA", "SA"]).withMessage("Invalid value."),
   check("goal").isIn(["LW", "MW", "GW"]).withMessage("Invalid value."),
+  check("mealsPerDay").isInt().withMessage("Must be int."),
   async (req, res) => {
     const errors = validationResult(req);
 
@@ -65,7 +66,7 @@ export const register = [
       picture,
     } = req.user;
 
-    const { name, height, weight, gender, age, activityLevel, goal } = req.body;
+    const { name, height, weight, gender, age, activityLevel, goal, mealsPerDay } = req.body;
 
     try {
       const newUser = await prisma.user.create({
@@ -81,6 +82,7 @@ export const register = [
           email,
           provider,
           picture,
+          mealsPerDay
         },
       });
 

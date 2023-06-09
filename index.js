@@ -5,6 +5,7 @@ import express from "express";
 import authRouter from "./routes/authRoutes.js";
 import trackerRouter from "./routes/trackerRoutes.js";
 import prisma from "./config/prisma.js";
+import profileRouter from "./routes/profileRoutes.js";
 
 const PORT = process.env.PORT || 8080;
 
@@ -22,7 +23,8 @@ app.get("/", async(req, res) => {
 });
 app.use("/auth", authRouter);
 app.use("/tracker", trackerRouter);
+app.use("/profile", profileRouter);
 
 app.listen(PORT, () =>
-  console.log(`Server is running on http://localhost:${PORT}`)
+  console.log(`Server is running on port :${PORT}`)
 );
