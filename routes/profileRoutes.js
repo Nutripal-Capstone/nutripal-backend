@@ -5,6 +5,6 @@ import verifyJWT from "../middleware/verifyJWT.js";
 const profileRouter = express.Router();
 
 profileRouter.get("/", verifyJWT, getProfile);
-profileRouter.put("/", verifyJWT, updateProfile);
+profileRouter.put("/", updateProfile);
 
 export default profileRouter;
