@@ -1,4 +1,5 @@
 import prisma from "../config/prisma.js";
+import { calculateNutrition } from "../utils/nutritionGoals.js";
 
 export const getProfile = async (req, res) => {
     const userId = req.user.id
@@ -23,11 +24,25 @@ export const getProfile = async (req, res) => {
 }
 
 export const updateProfile = async (req, res) => {
-    const newData = req.body
+    const userData = await prisma.user.findUnique({
+        where: {
+            id: req.user.id
+        }
+    })
+    const { age, weight, height, gender, activityLevel, goal, mealsPerDay} = { ...userData, ...req.body }
+    const { calorieGoal, fatGoal, carbohydrateGoal, proteinGoal } =
+    calculateNutrition(
+        age, height, weight, gender, activityLevel, goal
+    );
     try {
+        await prisma.nutritionGoal.create({
+            data: {
+              userId: req.user.id, calorieGoal, fatGoal, proteinGoal, carbohydrateGoal
+            },
+          });
         const user = await prisma.user.update({
             where:{id: req.user.id},
-            data: newData
+            data: { age, weight, height, gender, activityLevel, goal, mealsPerDay }
         })
         res.status(200).json({
             "success": true,
