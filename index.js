@@ -23,6 +23,7 @@ app.get("/", async(req, res) => {
 });
 app.use("/auth", authRouter);
 app.use("/tracker", trackerRouter);
+app.use("/profile", profileRouter);
 
 app.listen(PORT, () =>
   console.log(`Server is running on port :${PORT}`)
