@@ -35,7 +35,8 @@ export const updateProfile = async (req, res) => {
         age, height, weight, gender, activityLevel, goal
     );
     try {
-        await prisma.nutritionGoal.create({
+        await prisma.nutritionGoal.update({
+            where: {userId: req.user.id},
             data: {
               userId: req.user.id, calorieGoal, fatGoal, proteinGoal, carbohydrateGoal
             },
