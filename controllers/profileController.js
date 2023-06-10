@@ -24,26 +24,27 @@ export const getProfile = async (req, res) => {
 }
 
 export const updateProfile = async (req, res) => {
-    const userData = await prisma.user.findUnique({
-        where: {
-            id: req.user.id
-        }
-    })
-    const { age, weight, height, gender, activityLevel, goal, mealsPerDay} = { ...userData, ...req.body }
-    const { calorieGoal, fatGoal, carbohydrateGoal, proteinGoal } =
-    calculateNutrition(
-        age, height, weight, gender, activityLevel, goal
-    );
+    const userId = req.user.id
     try {
-        await prisma.nutritionGoal.update({
-            where: {userId: req.user.id},
+        const userData = await prisma.user.findUnique({
+            where: {
+                id: userId
+            }
+        })
+        const { name, age, weight, height, gender, activityLevel, goal, mealsPerDay} = { ...userData, ...req.body }
+        const { calorieGoal, fatGoal, carbohydrateGoal, proteinGoal } =
+        calculateNutrition(
+            age, height, weight, gender, activityLevel, goal
+        );
+        await prisma.nutritionGoal.create({
+            where: {userId: userId},
             data: {
-              userId: req.user.id, calorieGoal, fatGoal, proteinGoal, carbohydrateGoal
+              calorieGoal, fatGoal, proteinGoal, carbohydrateGoal
             },
           });
         const user = await prisma.user.update({
-            where:{id: req.user.id},
-            data: { age, weight, height, gender, activityLevel, goal, mealsPerDay }
+            where:{id: userId},
+            data: { name, age, weight, height, gender, activityLevel, goal, mealsPerDay }
         })
         res.status(200).json({
             "success": true,
