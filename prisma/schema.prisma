@@ -11,42 +11,24 @@ datasource db {
 }
 
 model User {
-  id            Int            @id @default(autoincrement())
-  firebaseId    String         @unique
+  id            Int      @id @default(autoincrement())
+  firebaseId    String   @unique
   name          String
   height        Int
   weight        Int
-  gender        Genders
+  gender        String
   age           Int
-  activityLevel ActivityLevels
-  goal          Goals
+  activityLevel String
+  goal          String
   email         String
   provider      String
   picture       String
-  mealsPerDay   Int?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  mealsPerDay   Int
+  dietType      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   nutritionGoals NutritionGoal[]
-}
-
-enum Genders {
-  M
-  F
-}
-
-enum ActivityLevels {
-  SD
-  LA
-  MA
-  VA
-  SA
-}
-
-enum Goals {
-  LW
-  MW
-  GW
 }
 
 model NutritionGoal {

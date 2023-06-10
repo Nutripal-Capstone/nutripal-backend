@@ -1,28 +1,40 @@
 // Need more research
 
-const Genders = {
-  M: 'M',
-  F: 'F'
-};
-
 const ActivityLevels = {
-  SD: 1.2,
-  LA: 1.375,
-  MA: 1.55,
-  VA: 1.725,
-  SA: 1.9
+  "Sedentary": 1.2,
+  "Lightly Active": 1.375,
+  "Maintain Active": 1.55,
+  "Very Active": 1.725,
+  "Super Active": 1.9,
 };
 
 const Goals = {
-  LW: 0.85,
-  MW: 1,
-  GW: 1.15
+  "Lose Weight": 0.85,
+  "Maintain Weight": 1,
+  "Gain Weight": 1.15,
 };
 
-export const calculateNutrition = (age, height, weight, gender, activityLevel, goal) => {
+const Diets = {
+  "Standard Balanced Diet": { carbs: 0.5, protein: 0.2, fat: 0.3 }, 
+  "High Carb Diet": { carbs: 0.6, protein: 0.15, fat: 0.25 }, 
+  "Keto Diet": { carbs: 0.05, protein: 0.2, fat: 0.75 }, 
+  "High Protein Diet": { carbs: 0.25, protein: 0.45, fat: 0.3 }, 
+  "Low Fat Diet": { carbs: 0.6, protein: 0.2, fat: 0.2 }, 
+};
+
+
+export const calculateNutrition = (
+  age,
+  height,
+  weight,
+  gender,
+  activityLevel,
+  goal,
+  dietType
+) => {
   let bmr;
 
-  if (gender === Genders.M) {
+  if (gender === "Male") {
     bmr = 10 * weight + 6.25 * height - 5 * age + 5;
   } else {
     bmr = 10 * weight + 6.25 * height - 5 * age - 161;
@@ -31,9 +43,11 @@ export const calculateNutrition = (age, height, weight, gender, activityLevel, g
   let tdee = bmr * ActivityLevels[activityLevel];
   let calorieGoal = Math.round(tdee * Goals[goal]);
 
-  let proteinGoal = Math.round((calorieGoal * 0.225) / 4);
-  let fatGoal = Math.round((calorieGoal * 0.275) / 9);
-  let carbohydrateGoal = Math.round((calorieGoal * 0.55) / 4); 
+  const diet = Diets[dietType]; // dietType should be passed in like gender, activityLevel, etc.
+
+  let proteinGoal = Math.round((calorieGoal * diet.protein) / 4);
+  let fatGoal = Math.round((calorieGoal * diet.fat) / 9);
+  let carbohydrateGoal = Math.round((calorieGoal * diet.carbs) / 4);
 
   return {
     calorieGoal,
