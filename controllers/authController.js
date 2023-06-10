@@ -28,7 +28,7 @@ export const login = async (req, res) => {
 
   const token = jwt.sign(payload, process.env.JWT_SECRET, {
     expiresIn: "30d",
-});
+  });
 
   return res.status(200).json({
     success: true,
@@ -43,11 +43,30 @@ export const register = [
   check("name").notEmpty().withMessage("Name is required."),
   check("height").isInt().withMessage("Must be int."),
   check("weight").isInt().withMessage("Must be int."),
-  check("gender").isIn(["M", "F"]).withMessage("Invalid value."),
+  check("gender").isIn(["Male", "Female"]).withMessage("Invalid value."),
   check("age").isInt().withMessage("Must be int."),
-  check("activityLevel").isIn(["SD", "LA", "MA", "VA", "SA"]).withMessage("Invalid value."),
-  check("goal").isIn(["LW", "MW", "GW"]).withMessage("Invalid value."),
+  check("activityLevel")
+    .isIn([
+      "Sedentary",
+      "Lightly Active",
+      "Moderately Active",
+      "Very Active",
+      "Super Active",
+    ])
+    .withMessage("Invalid value."),
+  check("goal")
+    .isIn(["Lose Weight", "Maintain Weight", "Gain Weight"])
+    .withMessage("Invalid value."),
   check("mealsPerDay").isInt().withMessage("Must be int."),
+  check("dietType")
+    .isIn([
+      "Standard Balanced Diet",
+      "High Carb Diet",
+      "Keto Diet",
+      "High Protein Diet",
+      "Low Fat Diet",
+    ])
+    .withMessage("Invalid value."),
   async (req, res) => {
     const errors = validationResult(req);
 
@@ -66,7 +85,17 @@ export const register = [
       picture,
     } = req.user;
 
-    const { name, height, weight, gender, age, activityLevel, goal, mealsPerDay } = req.body;
+    const {
+      name,
+      height,
+      weight,
+      gender,
+      age,
+      activityLevel,
+      goal,
+      mealsPerDay,
+      dietType,
+    } = req.body;
 
     try {
       const newUser = await prisma.user.create({
@@ -82,7 +111,8 @@ export const register = [
           email,
           provider,
           picture,
-          mealsPerDay
+          mealsPerDay,
+          dietType,
         },
       });
 
@@ -93,7 +123,8 @@ export const register = [
           newUser.weight,
           newUser.gender,
           newUser.activityLevel,
-          newUser.goal
+          newUser.goal,
+          newUser.dietType
         );
 
       await prisma.nutritionGoal.create({
