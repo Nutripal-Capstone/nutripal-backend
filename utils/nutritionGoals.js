@@ -15,10 +15,10 @@ const Goals = {
 };
 
 const Diets = {
-  "Standard Balanced Diet": { carbs: 0.5, protein: 0.2, fat: 0.3 }, 
+  "Standard Balanced Diet": { carbs: 0.5, protein: 0.225, fat: 0.275 }, 
   "High Carb Diet": { carbs: 0.6, protein: 0.15, fat: 0.25 }, 
   "Keto Diet": { carbs: 0.05, protein: 0.2, fat: 0.75 }, 
-  "High Protein Diet": { carbs: 0.25, protein: 0.45, fat: 0.3 }, 
+  "High Protein Diet": { carbs: 0.3, protein: 0.4, fat: 0.3 }, 
   "Low Fat Diet": { carbs: 0.6, protein: 0.2, fat: 0.2 }, 
 };
 
@@ -43,7 +43,7 @@ export const calculateNutrition = (
   let tdee = bmr * ActivityLevels[activityLevel];
   let calorieGoal = Math.round(tdee * Goals[goal]);
 
-  const diet = Diets[dietType]; // dietType should be passed in like gender, activityLevel, etc.
+  const diet = Diets[dietType]; 
 
   let proteinGoal = Math.round((calorieGoal * diet.protein) / 4);
   let fatGoal = Math.round((calorieGoal * diet.fat) / 9);
