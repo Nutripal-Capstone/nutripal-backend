@@ -6,6 +6,6 @@ import validateAccessToken from "../middleware/validateAccessToken.js";
 const foodRouter = express.Router();
 
 foodRouter.get("/search", verifyJWT, validateAccessToken, searchFood);
-foodRouter.get("/search", verifyJWT, validateAccessToken, detailFood);
+foodRouter.get("/detail", verifyJWT, validateAccessToken, detailFood);
 
 export default foodRouter;
