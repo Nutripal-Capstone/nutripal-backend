@@ -1,6 +1,6 @@
 import express from "express";
 import verifyJWT from "../middleware/verifyJWT.js";
-import { searchFood, detailFood } from "../controllers/searchController.js";
+import { searchFood, detailFood } from "../controllers/foodController.js";
 import validateAccessToken from "../middleware/validateAccessToken.js";
 
 const foodRouter = express.Router();
