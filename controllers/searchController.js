@@ -54,7 +54,7 @@ export const searchFood = async (req, res) => {
 };
 
 export const detailFood = async (req, res) => {
-  const { food_id, recipe_id } = req.query;
+  const { food_id, serving_id } = req.query;
 
   try {
     const response = await axios.get(
