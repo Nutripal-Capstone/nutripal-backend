@@ -57,21 +57,42 @@ export const detailFood = async (req, res) => {
   const { food_id, serving_id } = req.query;
 
   try {
+
     const response = await axios.get(
-      `https://platform.fatsecret.com/rest/server.api?method=food.get.v3&food_id=${food_id}`,
+      "https://platform.fatsecret.com/rest/server.api",
       {
-        headers: { Authorization: `Bearer ${req.accessToken}` },
+        headers: {
+          Authorization: `Bearer ${req.accessToken}`,
+        },
+        params: {
+          method: "food.get.v3",
+          food_id: food_id,
+          format: "json",
+        },
       }
     );
 
-    const { data } = response;
-    const {
-      servings: { serving },
-    } = data;
+    if (response.data.error) {
+      return res.status(400).json({
+        success: false,
+        message: response.data.error.message,
+        data: null,
+      });
+    }
 
-    const selectedServing = serving.find(
-      (item) => item.serving_id === recipe_id
+    const { food } = response.data;
+
+    const selectedServing = food.servings.serving.find(
+      (item) => item.serving_id === serving_id
     );
+
+    if (!selectedServing) {
+      return res.status(400).json({
+        success: false,
+        message: `Serving id '${serving_id}' does not exist`,
+        data: null,
+      });
+    }
 
     const properties = [
       "saturated_fat",
@@ -91,41 +112,34 @@ export const detailFood = async (req, res) => {
       "iron",
     ];
 
-    let result = null;
+    const result = {
+      food_id: food.food_id,
+      serving_id: selectedServing.serving_id,
+      food_name: food.food_name,
+      food_type: food.food_type,
+      serving_description: selectedServing.measurement_description,
+      calories: parseFloat(selectedServing.calories),
+      carbohydrate: parseFloat(selectedServing.carbohydrate),
+      protein: parseFloat(selectedServing.protein),
+      fat: parseFloat(selectedServing.fat),
+    };
 
-    if (selectedServing) {
-      result = {
-        food_id: data.food_id,
-        serving_id: selectedServing.serving_id,
-        food_name: data.food_name,
-        serving_description: selectedServing.measurement_description,
-        calories: parseFloat(selectedServing.calories),
-        carbohydrate: parseFloat(selectedServing.carbohydrate),
-        protein: parseFloat(selectedServing.protein),
-        fat: parseFloat(selectedServing.fat),
-      };
-
-      properties.forEach((prop) => {
-        result[prop] =
-          selectedServing[prop] !== undefined
-            ? parseFloat(selectedServing[prop])
-            : null;
-      });
-    }
+    properties.forEach((prop) => {
+      result[prop] =
+        selectedServing[prop] !== undefined
+          ? parseFloat(selectedServing[prop])
+          : null;
+    });
 
     res.status(200).json({
       success: true,
-      message: `Success getting detail for ${data.food_name}.`,
+      message: `Success getting detail for ${food.food_name}.`,
       data: result,
     });
   } catch (error) {
     console.error(error);
     res
       .status(500)
-      .json({
-        success: false,
-        message: "Error getting food detail.",
-        data: null,
-      });
+      .json({ success: false, message: error.message, data: null });
   }
 };
