@@ -34,6 +34,7 @@ export const updateProfile = async (req, res) => {
     "activityLevel",
     "goal",
     "dietType",
+    "mealsPerDay"
   ];
   try {
     const keys = Object.keys(req.body);
@@ -61,7 +62,9 @@ export const updateProfile = async (req, res) => {
       ...userData,
       ...req.body,
     };
-    if (allowedParameters.find((parameter) => keys.includes(parameter))) {
+    // Check if the params includes name or mealsPerDay it'll not create new NutritionGoal
+    const calculationParameter = allowedParameters.filter(p => p!== "name" && p!== "mealsPerDay")
+    if (calculationParameter.find((parameter) => Object.keys(req.body).includes(parameter))) {
       const { calorieGoal, fatGoal, carbohydrateGoal, proteinGoal } =
         calculateNutrition(
           age,
