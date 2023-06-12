@@ -2,11 +2,11 @@ import prisma from "../config/prisma.js";
 import { calculateNutrition } from "../utils/nutritionGoals.js";
 
 export const getProfile = async (req, res) => {
-  const userId = req.user.id;
+  const uid = req.user.uid;
   try {
     const user = await prisma.user.findUnique({
       where: {
-        id: userId,
+        firebaseId: uid,
       },
     });
     res.status(200).json({
@@ -24,7 +24,7 @@ export const getProfile = async (req, res) => {
 };
 
 export const updateProfile = async (req, res) => {
-  const userId = req.user.id;
+  const uid = req.user.uid;
   const allowedParameters = [
     "name",
     "age",
@@ -55,7 +55,7 @@ export const updateProfile = async (req, res) => {
 
     const userData = await prisma.user.findUnique({
       where: {
-        id: userId,
+        firebaseId: uid,
       },
     });
     const { age, weight, height, gender, activityLevel, goal, dietType } = {
@@ -77,7 +77,7 @@ export const updateProfile = async (req, res) => {
         );
       await prisma.nutritionGoal.create({
         data: {
-          userId,
+          userId: userData.id,
           calorieGoal,
           fatGoal,
           proteinGoal,
@@ -86,7 +86,7 @@ export const updateProfile = async (req, res) => {
       });
     }
     const user = await prisma.user.update({
-      where: { id: userId },
+      where: { firebaseId: uid },
       data: req.body,
     });
     res.status(200).json({
