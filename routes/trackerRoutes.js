@@ -4,6 +4,6 @@ import { getTrackerData } from "../controllers/trackerController.js";
 
 const trackerRouter = express.Router();
 
-trackerRouter.get("/data", verifyJWT, getTrackerData);
+trackerRouter.get("/", verifyJWT, getTrackerData);
 
 export default trackerRouter;
