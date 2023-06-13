@@ -117,7 +117,7 @@ export const detailFood = async (req, res) => {
       serving_id: selectedServing.serving_id,
       food_name: food.food_name,
       food_type: food.food_type,
-      serving_description: selectedServing.measurement_description,
+      serving_description: selectedServing.serving_description,
       calories: parseFloat(selectedServing.calories),
       carbohydrate: parseFloat(selectedServing.carbohydrate),
       protein: parseFloat(selectedServing.protein),
