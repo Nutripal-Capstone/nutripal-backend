@@ -23,12 +23,13 @@ model User {
   email         String
   provider      String
   picture       String
-  mealsPerDay   Int
+  mealsPerDay   Int?
   dietType      String
   createdAt     DateTime @default(now()) @db.Timestamptz(3)
   updatedAt     DateTime @updatedAt @db.Timestamptz(3)
 
   nutritionGoals NutritionGoal[]
+  meals          Meal[]
 }
 
 model NutritionGoal {
@@ -40,4 +41,34 @@ model NutritionGoal {
   carbohydrateGoal Int
   fatGoal          Int
   createdAt        DateTime @default(now()) @db.Timestamptz(3)
+}
+
+model Food {
+  id                 Int    @id @default(autoincrement())
+  foodId             String
+  servingId          String
+  foodName           String
+  servingDescription String
+  calories           Float
+  protein            Float
+  carbohydrate       Float
+  fat                Float
+
+  meals Meal[]
+}
+
+model Meal {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  foodId    Int
+  food      Food     @relation(fields: [foodId], references: [id])
+  mealTime  String
+  type      MealType
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+}
+
+enum MealType {
+  EATEN
+  RECOMMENDED
 }

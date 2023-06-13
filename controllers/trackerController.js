@@ -1,7 +1,8 @@
 import moment from "moment-timezone";
 
 export const getTrackerData = async (req, res) => {
-  let date = moment().tz("Asia/Jakarta").endOf("day").toDate();
+  let startDate = moment().tz("Asia/Jakarta").startOf("day").toDate();
+  let endDate = moment().tz("Asia/Jakarta").endOf("day").toDate();
 
   const userId = req.user.id;
   try {
@@ -9,7 +10,7 @@ export const getTrackerData = async (req, res) => {
       where: {
         userId: userId,
         createdAt: {
-          lte: date,
+          lte: endDate,
         },
       },
       orderBy: {
@@ -17,20 +18,49 @@ export const getTrackerData = async (req, res) => {
       },
     });
 
-    //TODO: fetch food intake
-    const eatenFood = [];
-    const foodRecommendation = [];
+    const meals = await prisma.meal.findMany({
+      where: {
+        userId: userId,
+        createdAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      include: {
+        food: true,
+      },
+    });
 
     let response = {
       success: true,
-      data: {
-        date: date.toISOString().split("T")[0],
-        nutritionGoal: null,
-        foodRecommendation,
-        eatenFood,
-      },
       message: "Success fetch tracker data.",
+      data: {
+        date: endDate.toISOString().split("T")[0],
+        nutritionGoal: null,
+        mealPlan: {
+          breakfast: [],
+          lunch: [],
+          dinner: [],
+        },
+        eatenFood: {
+          breakfast: [],
+          lunch: [],
+          dinner: [],
+        },
+      },
     };
+
+    meals.forEach((meal) => {
+      let mealTime = meal.mealTime.toLowerCase();
+      let type = meal.type.toLowerCase();
+
+      meal.food.id = meal.id;
+      if (type === "recommended") {
+        response.data.mealPlan[mealTime].push(meal.food);
+      } else {
+        response.data.eatenFood[mealTime].push(meal.food);
+      }
+    });
 
     if (nutritionGoal) {
       const { calorieGoal, proteinGoal, carbohydrateGoal, fatGoal } =
@@ -53,7 +83,10 @@ export const getTrackerData = async (req, res) => {
 };
 
 export const getHistoryData = async (req, res) => {
-  let date = moment().tz("Asia/Jakarta").endOf("day").toDate();
+  let endDate = moment().tz("Asia/Jakarta").endOf("day").toDate();
+  let startDate = moment().tz("Asia/Jakarta").startOf("day").toDate();
+  startDate.setDate(startDate.getDate() + 1 * 8);
+  endDate.setDate(endDate.getDate() + 1 * 8);
 
   const userId = req.user.id;
   let response = {
@@ -64,14 +97,15 @@ export const getHistoryData = async (req, res) => {
 
   try {
     const page = parseInt(req.query.page) || 0;
-    date.setDate(date.getDate() - page * 7);
+    endDate.setDate(endDate.getDate() - page * 7);
+    startDate.setDate(startDate.getDate() - page * 7);
 
     for (let i = 0; i < 7; i++) {
       const nutritionGoal = await prisma.nutritionGoal.findFirst({
         where: {
           userId: userId,
           createdAt: {
-            lte: date,
+            lte: endDate,
           },
         },
         orderBy: {
@@ -79,24 +113,42 @@ export const getHistoryData = async (req, res) => {
         },
       });
 
+      const meals = await prisma.meal.findMany({
+        where: {
+          userId: userId,
+          type: "EATEN",
+          createdAt: {
+            gte: startDate,
+            lte: endDate,
+          },
+        },
+        include: {
+          food: true,
+        },
+      });
+
+      const foods = meals.map(({ food }) => {
+        const { id, ...rest } = food;
+        return rest;
+      });
+
       if (nutritionGoal) {
         const { calorieGoal, proteinGoal, carbohydrateGoal, fatGoal } =
           nutritionGoal;
 
         response.data.push({
-          date: moment(date).tz("Asia/Jakarta").format("dddd, DD MMMM YYYY"),
+          date: moment(endDate).tz("Asia/Jakarta").format("dddd, DD MMMM YYYY"),
           nutritionGoal: {
             calorieGoal,
             proteinGoal,
             carbohydrateGoal,
             fatGoal,
           },
-          eatenFood: [],
+          eatenFood: foods,
         });
       }
-
-      // Move to the previous day.
-      date.setDate(date.getDate() - 1);
+      endDate.setDate(endDate.getDate() - 1);
+      startDate.setDate(startDate.getDate() - 1);
     }
 
     return res.status(200).json(response);
