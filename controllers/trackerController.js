@@ -84,7 +84,7 @@ export const getHistoryData = async (req, res) => {
           nutritionGoal;
 
         response.data.push({
-          date: date.toISOString().split("T")[0],
+          date: moment(date).tz("Asia/Jakarta").format("dddd, DD MMMM YYYY"),
           nutritionGoal: {
             calorieGoal,
             proteinGoal,
