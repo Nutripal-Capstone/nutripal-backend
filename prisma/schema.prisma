@@ -25,8 +25,8 @@ model User {
   picture       String
   mealsPerDay   Int
   dietType      String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime @updatedAt @db.Timestamptz(3)
 
   nutritionGoals NutritionGoal[]
 }
@@ -39,5 +39,5 @@ model NutritionGoal {
   proteinGoal      Int
   carbohydrateGoal Int
   fatGoal          Int
-  createdAt        DateTime @default(now())
+  createdAt        DateTime @default(now()) @db.Timestamptz(3)
 }
