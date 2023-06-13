@@ -24,6 +24,7 @@ export const getTrackerData = async (req, res) => {
     let response = {
       success: true,
       data: {
+        date: date.toISOString().split("T")[0],
         nutritionGoal: null,
         foodRecommendation,
         eatenFood,
