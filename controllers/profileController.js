@@ -86,7 +86,7 @@ export const updateProfile = async (req, res) => {
       });
     }
     const user = await prisma.user.update({
-      where: { firebaseId: uid },
+      where: { id: userId },
       data: req.body,
     });
     res.status(200).json({
