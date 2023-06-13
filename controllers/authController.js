@@ -57,7 +57,6 @@ export const register = [
   check("goal")
     .isIn(["Lose Weight", "Maintain Weight", "Gain Weight"])
     .withMessage("Invalid value."),
-  check("mealsPerDay").isInt().withMessage("Must be int."),
   check("dietType")
     .isIn([
       "Standard Balanced Diet",
