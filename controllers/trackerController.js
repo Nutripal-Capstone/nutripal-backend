@@ -85,8 +85,6 @@ export const getTrackerData = async (req, res) => {
 export const getHistoryData = async (req, res) => {
   let endDate = moment().tz("Asia/Jakarta").endOf("day").toDate();
   let startDate = moment().tz("Asia/Jakarta").startOf("day").toDate();
-  startDate.setDate(startDate.getDate() + 1 * 8);
-  endDate.setDate(endDate.getDate() + 1 * 8);
 
   const userId = req.user.id;
   let response = {
