@@ -99,36 +99,51 @@ export const getHistoryData = async (req, res) => {
     startDate.setDate(startDate.getDate() - page * 7);
 
     for (let i = 0; i < 7; i++) {
-      const nutritionGoal = await prisma.nutritionGoal.findFirst({
-        where: {
-          userId: userId,
-          createdAt: {
-            lte: endDate,
+      const [nutritionGoal, meals] = await Promise.all([
+        prisma.nutritionGoal.findFirst({
+          where: {
+            userId: userId,
+            createdAt: {
+              lte: endDate,
+            },
           },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      });
-
-      const meals = await prisma.meal.findMany({
-        where: {
-          userId: userId,
-          type: "EATEN",
-          createdAt: {
-            gte: startDate,
-            lte: endDate,
+          orderBy: {
+            createdAt: "desc",
           },
-        },
-        include: {
-          food: true,
-        },
-      });
+        }),
+        prisma.meal.findMany({
+          where: {
+            userId: userId,
+            type: "EATEN",
+            createdAt: {
+              gte: startDate,
+              lte: endDate,
+            },
+          },
+          include: {
+            food: true,
+          },
+        }),
+      ]);
 
-      const foods = meals.map(({ food }) => {
+      let eatenNutrition = {
+        calories: 0,
+        protein: 0,
+        carbohydrate: 0,
+        fat: 0,
+      };
+
+      const foods = meals.reduce((acc, { food }) => {
         const { id, ...rest } = food;
-        return rest;
-      });
+
+        eatenNutrition.calories += food.calories;
+        eatenNutrition.protein += food.protein;
+        eatenNutrition.carbohydrate += food.carbohydrate;
+        eatenNutrition.fat += food.fat;
+
+        acc.push(rest);
+        return acc;
+      }, []);
 
       if (nutritionGoal) {
         const { calorieGoal, proteinGoal, carbohydrateGoal, fatGoal } =
@@ -143,6 +158,7 @@ export const getHistoryData = async (req, res) => {
             fatGoal,
           },
           eatenFood: foods,
+          eatenNutrition,
         });
       }
       endDate.setDate(endDate.getDate() - 1);
