@@ -6,30 +6,46 @@ export const getTrackerData = async (req, res) => {
 
   const userId = req.user.id;
   try {
-    const nutritionGoal = await prisma.nutritionGoal.findFirst({
-      where: {
-        userId: userId,
-        createdAt: {
-          lte: endDate,
+    const [nutritionGoal, meals] = await Promise.all([
+      prisma.nutritionGoal.findFirst({
+        where: {
+          userId,
+          createdAt: {
+            lte: endDate,
+          },
         },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+        orderBy: {
+          createdAt: "desc",
+        },
+      }),
 
-    const meals = await prisma.meal.findMany({
-      where: {
-        userId: userId,
-        createdAt: {
-          gte: startDate,
-          lte: endDate,
+      prisma.meal.findMany({
+        where: {
+          userId,
+          createdAt: {
+            gte: startDate,
+            lte: endDate,
+          },
         },
-      },
-      include: {
-        food: true,
-      },
-    });
+        include: {
+          food: true,
+        },
+      }),
+    ]);
+
+    let eatenNutrition = {
+      calories: 0,
+      protein: 0,
+      carbohydrate: 0,
+      fat: 0,
+    };
+
+    let wholeNutrition = {
+      calories: 0,
+      protein: 0,
+      carbohydrate: 0,
+      fat: 0,
+    };
 
     let response = {
       success: true,
@@ -37,6 +53,8 @@ export const getTrackerData = async (req, res) => {
       data: {
         date: endDate.toISOString().split("T")[0],
         nutritionGoal: null,
+        eatenNutrition,
+        wholeNutrition,
         mealPlan: {
           breakfast: [],
           lunch: [],
@@ -55,14 +73,41 @@ export const getTrackerData = async (req, res) => {
       let type = meal.type.toLowerCase();
 
       meal.food.id = meal.id;
+
+      wholeNutrition.calories += meal.food.calories;
+      wholeNutrition.protein += meal.food.protein;
+      wholeNutrition.carbohydrate += meal.food.carbohydrate;
+      wholeNutrition.fat += meal.food.fat;
+
       if (type === "recommended") {
         response.data.mealPlan[mealTime].push(meal.food);
       } else {
         response.data.eatenFood[mealTime].push(meal.food);
+
+        eatenNutrition.calories += meal.food.calories;
+        eatenNutrition.protein += meal.food.protein;
+        eatenNutrition.carbohydrate += meal.food.carbohydrate;
+        eatenNutrition.fat += meal.food.fat;
       }
     });
 
     if (nutritionGoal) {
+      eatenNutrition.calories = parseFloat(eatenNutrition.calories.toFixed(2));
+      eatenNutrition.protein = parseFloat(eatenNutrition.protein.toFixed(2));
+      eatenNutrition.carbohydrate = parseFloat(
+        eatenNutrition.carbohydrate.toFixed(2)
+      );
+      eatenNutrition.fat = parseFloat(eatenNutrition.fat.toFixed(2));
+
+      wholeNutrition.calories = parseFloat(wholeNutrition.calories.toFixed(2));
+      wholeNutrition.protein = parseFloat(wholeNutrition.protein.toFixed(2));
+      wholeNutrition.carbohydrate = parseFloat(
+        wholeNutrition.carbohydrate.toFixed(2)
+      );
+      wholeNutrition.fat = parseFloat(wholeNutrition.fat.toFixed(2));
+
+      response.data.eatenNutrition = eatenNutrition;
+      response.data.wholeNutrition = wholeNutrition;
       const { calorieGoal, proteinGoal, carbohydrateGoal, fatGoal } =
         nutritionGoal;
       response.data.nutritionGoal = {
@@ -146,6 +191,14 @@ export const getHistoryData = async (req, res) => {
       }, []);
 
       if (nutritionGoal) {
+        eatenNutrition.calories = parseFloat(
+          eatenNutrition.calories.toFixed(2)
+        );
+        eatenNutrition.protein = parseFloat(eatenNutrition.protein.toFixed(2));
+        eatenNutrition.carbohydrate = parseFloat(
+          eatenNutrition.carbohydrate.toFixed(2)
+        );
+        eatenNutrition.fat = parseFloat(eatenNutrition.fat.toFixed(2));
         const { calorieGoal, proteinGoal, carbohydrateGoal, fatGoal } =
           nutritionGoal;
 
@@ -157,8 +210,8 @@ export const getHistoryData = async (req, res) => {
             carbohydrateGoal,
             fatGoal,
           },
-          eatenFood: foods,
           eatenNutrition,
+          eatenFood: foods,
         });
       }
       endDate.setDate(endDate.getDate() - 1);
