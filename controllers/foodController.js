@@ -1,5 +1,6 @@
 import axios from "axios";
 import { check, validationResult } from "express-validator";
+import moment from "moment-timezone";
 
 export const searchFood = async (req, res) => {
   const { name, page = 0 } = req.query;
@@ -222,7 +223,7 @@ export const addToMealPlan = [
           data: {
             userId: req.user.id,
             foodId: newFood.id,
-            mealTime: mealTime,
+            mealTime: mealTime.toLowerCase(),
             type: "RECOMMENDED",
           },
         });
@@ -231,7 +232,7 @@ export const addToMealPlan = [
           data: {
             userId: req.user.id,
             foodId: existingFood.id,
-            mealTime: mealTime,
+            mealTime: mealTime.toLowerCase(),
             type: "RECOMMENDED",
           },
         });
@@ -284,6 +285,204 @@ export const updateMealStatus = (status) => async (req, res) => {
     res.json({
       success: true,
       message: `Meal type updated to ${status}`,
+      data: null,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: error.message, data: null });
+  }
+};
+
+export const recommendMeal = async (req, res) => {
+  try {
+    let mealTimeQueryParam = req.query.mealTime;
+    if (mealTimeQueryParam) {
+      mealTimeQueryParam = mealTimeQueryParam.toLowerCase();
+    }
+
+    if (
+      mealTimeQueryParam &&
+      !["breakfast", "lunch", "dinner", "all"].includes(mealTimeQueryParam)
+    ) {
+      res.status(400).json({
+        success: false,
+        message:
+          'Invalid mealTime query parameter. It should be either "breakfast", "lunch", "dinner", or "all".',
+        data: null,
+      });
+      return;
+    }
+
+    let startOfDay = moment().tz("Asia/Jakarta").startOf("day").toDate();
+    let endOfDay = moment().tz("Asia/Jakarta").endOf("day").toDate();
+
+    const nutritionGoals = await prisma.nutritionGoal.findFirst({
+      where: {
+        userId: req.user.id,
+        createdAt: {
+          lte: endOfDay,
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    const { calorieGoal, fatGoal, carbohydrateGoal, proteinGoal } =
+      nutritionGoals;
+
+    // Distribute calories across meals
+    const mealCalories = {
+      breakfast: calorieGoal * 0.3,
+      lunch: calorieGoal * 0.4,
+      dinner: calorieGoal * 0.3,
+    };
+
+    if (mealTimeQueryParam && mealTimeQueryParam !== "all") {
+      await prisma.meal.deleteMany({
+        where: {
+          type: "RECOMMENDED",
+          userId: req.user.id,
+          mealTime: mealTimeQueryParam,
+          createdAt: {
+            gte: startOfDay,
+            lte: endOfDay,
+          },
+        },
+      });
+    } else {
+      // Deleting all existing recommended meals
+      await prisma.meal.deleteMany({
+        where: {
+          type: "RECOMMENDED",
+          userId: req.user.id,
+          createdAt: {
+            gte: startOfDay,
+            lte: endOfDay,
+          },
+        },
+      });
+    }
+    const response = await axios.post(
+      "https://nutripal-model-deployment-fwa4vt3fma-uc.a.run.app/recommend",
+      {
+        calorie: calorieGoal,
+      }
+    );
+
+    let foods = response.data;
+    let mealTimes;
+    let nutrientGoals;
+    let mealTimeIndex = 0;
+
+    if (mealTimeQueryParam && mealTimeQueryParam !== "all") {
+      mealTimes = [mealTimeQueryParam];
+      nutrientGoals = {
+        overallCalories: calorieGoal / 3,
+        overallFat: fatGoal / 3,
+        overallCarbs: carbohydrateGoal / 3,
+        overallProtein: proteinGoal / 3,
+        remainingCalories: mealCalories[mealTimeQueryParam],
+        remainingFat: fatGoal / 3,
+        remainingCarbs: carbohydrateGoal / 3,
+        remainingProtein: proteinGoal / 3,
+      };
+    } else {
+      mealTimes = ["breakfast", "lunch", "dinner"];
+      nutrientGoals = {
+        overallCalories: calorieGoal,
+        overallFat: fatGoal,
+        overallCarbs: carbohydrateGoal,
+        overallProtein: proteinGoal,
+        remainingCalories: mealCalories[mealTimes[mealTimeIndex]],
+        remainingFat: fatGoal / 3,
+        remainingCarbs: carbohydrateGoal / 3,
+        remainingProtein: proteinGoal / 3,
+      };
+    }
+
+    // Define a helper function to calculate Euclidean distance
+    const calcDistance = (food, goals) => {
+      return Math.sqrt(
+        Math.pow(food.calories - goals.remainingCalories, 2) +
+          Math.pow(food.fat - goals.remainingFat, 2) +
+          Math.pow(food.carbohydrate - goals.remainingCarbs, 2) +
+          Math.pow(food.protein - goals.remainingProtein, 2)
+      );
+    };
+
+    while (foods.length > 0 && mealTimeIndex < mealTimes.length) {
+      // Sort the foods by their distance to the current nutrient goals
+      foods.sort((a, b) => {
+        const aDistance = calcDistance(a, nutrientGoals);
+        const bDistance = calcDistance(b, nutrientGoals);
+
+        return aDistance - bDistance;
+      });
+
+      // Pick the first food
+      const food = foods.shift();
+      const existingFood = await prisma.food.findFirst({
+        where: {
+          foodId: food.food_id,
+          servingId: food.serving_id,
+        },
+      });
+
+      if (!existingFood) continue;
+
+      // Check if this food would cause any nutrient to exceed the goal
+      if (
+        nutrientGoals.overallCalories - existingFood.calories < 0 ||
+        nutrientGoals.overallFat - existingFood.fat < 0 ||
+        nutrientGoals.overallCarbs - existingFood.carbohydrate < 0 ||
+        nutrientGoals.overallProtein - existingFood.protein < 0
+      ) {
+        continue;
+      }
+
+      await prisma.meal.create({
+        data: {
+          userId: req.user.id,
+          foodId: existingFood.id,
+          mealTime: mealTimes[mealTimeIndex],
+          type: "RECOMMENDED",
+        },
+      });
+
+      // Adjust the remaining nutrient goals
+      nutrientGoals.overallCalories -= existingFood.calories;
+      nutrientGoals.overallFat -= existingFood.fat;
+      nutrientGoals.overallCarbs -= existingFood.carbohydrate;
+      nutrientGoals.overallProtein -= existingFood.protein;
+
+      mealTimeIndex = (mealTimeIndex + 1) % mealTimes.length;
+
+      // Update nutrient goals for the next meal
+      if (mealTimeIndex < mealTimes.length) {
+        nutrientGoals.remainingCalories = Math.min(
+          nutrientGoals.overallCalories,
+          mealCalories[mealTimes[mealTimeIndex]]
+        );
+        nutrientGoals.remainingFat = Math.min(
+          nutrientGoals.overallFat,
+          fatGoal / 3
+        );
+        nutrientGoals.remainingCarbs = Math.min(
+          nutrientGoals.overallCarbs,
+          carbohydrateGoal / 3
+        );
+        nutrientGoals.remainingProtein = Math.min(
+          nutrientGoals.overallProtein,
+          proteinGoal / 3
+        );
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Meal plan recommendation created succesfuly.",
       data: null,
     });
   } catch (error) {
