@@ -296,6 +296,24 @@ export const updateMealStatus = (status) => async (req, res) => {
 
 export const recommendMeal = async (req, res) => {
   try {
+    let mealTimeQueryParam = req.query.mealTime;
+    if (mealTimeQueryParam) {
+      mealTimeQueryParam = mealTimeQueryParam.toLowerCase();
+    }
+
+    if (
+      mealTimeQueryParam &&
+      !["breakfast", "lunch", "dinner", "all"].includes(mealTimeQueryParam)
+    ) {
+      res.status(400).json({
+        success: false,
+        message:
+          'Invalid mealTime query parameter. It should be either "breakfast", "lunch", "dinner", or "all".',
+        data: null,
+      });
+      return;
+    }
+
     let startOfDay = moment().tz("Asia/Jakarta").startOf("day").toDate();
     let endOfDay = moment().tz("Asia/Jakarta").endOf("day").toDate();
 
@@ -320,11 +338,6 @@ export const recommendMeal = async (req, res) => {
       lunch: calorieGoal * 0.4,
       dinner: calorieGoal * 0.3,
     };
-
-    let mealTimeQueryParam = req.query.mealTime;
-    if (mealTimeQueryParam) {
-      mealTimeQueryParam = mealTimeQueryParam.toLowerCase();
-    }
 
     if (mealTimeQueryParam && mealTimeQueryParam !== "all") {
       await prisma.meal.deleteMany({
@@ -370,7 +383,7 @@ export const recommendMeal = async (req, res) => {
         overallFat: fatGoal / 3,
         overallCarbs: carbohydrateGoal / 3,
         overallProtein: proteinGoal / 3,
-        remainingCalories: mealCalories[mealTimes[mealTimeIndex]],
+        remainingCalories: mealCalories[mealTimeQueryParam],
         remainingFat: fatGoal / 3,
         remainingCarbs: carbohydrateGoal / 3,
         remainingProtein: proteinGoal / 3,
