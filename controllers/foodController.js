@@ -321,9 +321,11 @@ export const recommendMeal = async (req, res) => {
       dinner: calorieGoal * 0.3,
     };
 
-    const mealTimeQueryParam = req.query.mealTime;
+    let mealTimeQueryParam = req.query.mealTime;
+    if (mealTimeQueryParam) {
+      mealTimeQueryParam = mealTimeQueryParam.toLowerCase();
+    }
 
-    // Deleting existing meals
     if (mealTimeQueryParam && mealTimeQueryParam !== "all") {
       await prisma.meal.deleteMany({
         where: {
