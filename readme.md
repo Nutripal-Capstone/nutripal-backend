@@ -1,5 +1,9 @@
 # Nutripal Backend
 
+### API Documentation
+<a href="https://github.com/Nutripal-Capstone/nutripal-backend/blob/main/api-docs.md" target="_blank">API Docs</a>
+
+
 ### Quick Start
 
 **Install dependencies:**
